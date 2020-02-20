@@ -11,7 +11,7 @@ class Schema(object):
         max_lens = [f.max_value_length() for f in self.fields] 
         s = ""
         for row in fields_transposed:
-            values_and_lengths = zip(row, max_lens)
+            values_and_lengths = list(zip(row, max_lens))
             s = s + '|'.join('{0:{width}}'.format(x, width=y) for x, y in values_and_lengths) + "\n"
         return s
 
@@ -43,7 +43,7 @@ class Schema(object):
                     rows[i] = []
                 rows[i].append(v)
                 i += 1
-        rows = sorted(rows.iteritems(), key=lambda x: x[0])
+        rows = sorted(iter(rows.items()), key=lambda x: x[0])
         return [x[1] for x in rows]
 
     class SchemaEncoder(json.JSONEncoder):

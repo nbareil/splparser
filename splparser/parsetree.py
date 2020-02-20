@@ -53,9 +53,9 @@ class ParseTreeNode(object):
         >>> p.parent
         """
         # TODO: Use property decorator for the three strings here.
-        self.role = str(role.encode("utf8")) if type(role) == unicode else str(role.decode("utf8").encode("utf8"))
-        self.nodetype = str(nodetype.encode("utf8")) if type(nodetype) == unicode else str(nodetype.decode("utf8").encode("utf8"))
-        self.raw = str(raw.encode("utf8")) if type(raw) == unicode else str(raw.decode("utf8").encode("utf8"))
+        self.role = str(role.encode("utf8")) if type(role) == str else str(role.decode("utf8").encode("utf8"))
+        self.nodetype = str(nodetype.encode("utf8")) if type(nodetype) == str else str(nodetype.decode("utf8").encode("utf8"))
+        self.raw = str(raw.encode("utf8")) if type(raw) == str else str(raw.decode("utf8").encode("utf8"))
         self.parent = None
         self.children = []
         self.is_associative = is_associative
@@ -443,7 +443,7 @@ class ParseTreeNode(object):
             else:
                 stage = groupby.get_parent_stage()
                 groupby.parent.children.remove(groupby)
-                groupby.parent.add_children(filter(lambda x: x.role.find('GROUPING') == -1, groupby.children))
+                groupby.parent.add_children([x for x in groupby.children if x.role.find('GROUPING') == -1])
                 groupby.parent = None
                 innerstack = []
                 innerstack.insert(0, stage)
@@ -454,7 +454,7 @@ class ParseTreeNode(object):
                         g.corrected = True
                         node.parent.swap_children(node, g)
                         g.add_child(node)
-                        for c in filter(lambda x: x.role.find('GROUPING') > -1, groupby.children):
+                        for c in [x for x in groupby.children if x.role.find('GROUPING') > -1]:
                             d = c.copy_tree()
                             g.add_child(d) 
                     else:
@@ -495,7 +495,7 @@ class ParseTreeNode(object):
                             keepgoing = False
                             break
                         #key = ''.join(['X', str(var.next())])
-                        key = var.next()
+                        key = next(var)
                         new = ParseTreeNode('VAR', raw=key)
                         new.exl = True
                         node.parent.swap_children(node, new)
@@ -572,7 +572,7 @@ class ParseTreeNode(object):
         :type self: ParseTreeNode
         :rtype: ParseTreeNode
         """
-        children = map(lambda x: x.copy_tree(), self.children) 
+        children = [x.copy_tree() for x in self.children] 
         p = self.copy_node()
         p.values = self.values
         p.add_children(children)
@@ -589,7 +589,7 @@ class ParseTreeNode(object):
         :type self: ParseTreeNode
         :rtype: ParseTreeNode
         """
-        children = map(lambda x: x.copy_tree(), self.children) 
+        children = [x.copy_tree() for x in self.children] 
         p = self.copy_node()
         p.values = self.values
         p.add_children(children)
@@ -643,7 +643,7 @@ class ParseTreeNode(object):
         :type self: ParseTreeNode
         :rtype: ParseTreeNode
         """
-        children = map(lambda x: x.skeleton(), self.children) 
+        children = [x.skeleton() for x in self.children] 
         if self.is_argument:
             p = ParseTreeNode('', is_argument=True)
         else:
@@ -661,7 +661,7 @@ class ParseTreeNode(object):
         :type self: ParseTreeNode
         :rtype: ParseTreeNode
         """
-        children = map(lambda x: x.inverse_skeleton(), self.children) 
+        children = [x.inverse_skeleton() for x in self.children] 
         if not self.is_argument:
             p = ParseTreeNode('', is_argument=False)
         else:
@@ -698,7 +698,7 @@ class ParseTreeNode(object):
 
     def _flatten_roles_to_string(self):
         flattened_children = [child._flatten_roles_to_string() for child in self.children]
-        flattened_children = filter(lambda x: not x == '()', flattened_children)
+        flattened_children = [x for x in flattened_children if not x == '()']
         children_string = ','.join(flattened_children)
         children_string = ''.join(['(', children_string, ')'])
         if self.role == '':
@@ -959,7 +959,7 @@ class ParseTreeNode(object):
         >>> p.print_tree(recursive=False)
         ('PARENT')
         """
-        print self.str_tree(recursive=recursive)
+        print(self.str_tree(recursive=recursive))
 
     def itertree(self):
         """Iterate through the entire tree depth-first, yielding nodes along the way.
@@ -991,7 +991,7 @@ class ParseTreeNode(object):
             field = fields[field_token.raw]
             field.values = list(set(field.values) | set([value.raw for value in field_token.values]))
         s = schema.Schema()
-        s.fields = fields.values()
+        s.fields = list(fields.values())
         
         value_tokens = self.extract_values()
         for value_token in value_tokens:

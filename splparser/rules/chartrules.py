@@ -25,10 +25,10 @@ def correct_groupby(command): # HACK
             stack.insert(0, c)
     if not groupby: return
     groupby.parent.children.remove(groupby)
-    groupby.children = filter(lambda x: x.raw != 'groupby' and x.raw != 'assign', command.children) + groupby.children 
+    groupby.children = [x for x in command.children if x.raw != 'groupby' and x.raw != 'assign'] + groupby.children 
     for c in groupby.children:
         c.parent = groupby
-    command.children = filter(lambda x: x.raw == 'assign', command.children) + [groupby]
+    command.children = [x for x in command.children if x.raw == 'assign'] + [groupby]
 
 def correct_over(command): # HACK
     over = None
@@ -42,10 +42,10 @@ def correct_over(command): # HACK
             stack.insert(0, c)
     if not over: return
     over.parent.children.remove(over)
-    over.children = filter(lambda x: x.raw != 'over' and x.raw != 'assign', command.children) + over.children 
+    over.children = [x for x in command.children if x.raw != 'over' and x.raw != 'assign'] + over.children 
     for c in over.children:
         c.parent = over
-    command.children = filter(lambda x: x.raw == 'assign', command.children) + [over]
+    command.children = [x for x in command.children if x.raw == 'assign'] + [over]
 
 def p_cmdexpr_chart(p):
     """cmdexpr : chartcmd"""
